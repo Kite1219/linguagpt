@@ -44,12 +44,6 @@ function AppContent() {
   useEffect(() => {
     const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.platform);
     const handler = async (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      const isEditable = !!target && (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        (target as any).isContentEditable
-      );
 
       const mod = isMac ? e.metaKey : e.ctrlKey;
 
@@ -97,7 +91,7 @@ function AppContent() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [translation, isHistoryOpen, isShortcutsOpen]);
+  }, [translation, isHistoryOpen, isShortcutsOpen, addToast]);
 
   useEffect(() => {
     setDraftInput(inputText);
