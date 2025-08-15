@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@notionhq/client": "^4.0.2",
     "@types/node": "^16.18.68",
     "@types/react": "^18.2.42",
     "@types/react-dom": "^18.2.17",
@@ -45,4 +46,3 @@
     "tailwindcss": "^3.3.6"
   }
 }
-

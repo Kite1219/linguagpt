@@ -6,13 +6,15 @@ import TranslationInput from './components/TranslationInput';
 import TranslationOutput from './components/TranslationOutput';
 import HistoryModal from './components/HistoryModal';
 import ShortcutsModal from './components/ShortcutsModal';
+import NotionModal from './components/NotionModal';
 import ToastContainer from './components/ToastContainer';
 import { translateText } from './services/openai';
 import { Language, TranslationResponse } from './types';
 import { addToHistory, getHistory, HistoryItem, clearHistory, findCachedTranslation } from './services/history';
 import { languages } from './data/languages';
 import { getDraftInput, setDraftInput, getDraftTranslation, setDraftTranslation } from './services/draft';
-import { getPreferredSourceLanguageCode, getPreferredTargetLanguageCode, setPreferredSourceLanguageCode, setPreferredTargetLanguageCode } from './services/preferences';
+import { getPreferredSourceLanguageCode, getPreferredTargetLanguageCode, setPreferredSourceLanguageCode, setPreferredTargetLanguageCode, getNotionEnabled } from './services/preferences';
+import { addToNotion } from './services/notion';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 
 function AppContent() {
@@ -39,6 +41,8 @@ function AppContent() {
   const [history, setHistory] = useState<HistoryItem[]>(() => getHistory());
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
+  const [isNotionModalOpen, setIsNotionModalOpen] = useState(false);
+  const [isAddingToNotion, setIsAddingToNotion] = useState(false);
 
   // Global keyboard shortcuts
   useEffect(() => {
@@ -59,6 +63,7 @@ function AppContent() {
         e.preventDefault();
         if (isHistoryOpen) { setIsHistoryOpen(false); return; }
         if (isShortcutsOpen) { setIsShortcutsOpen(false); return; }
+        if (isNotionModalOpen) { setIsNotionModalOpen(false); return; }
         setInputText('');
         setTranslation(null);
         addToast('Input cleared', 'info');
@@ -91,7 +96,7 @@ function AppContent() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [translation, isHistoryOpen, isShortcutsOpen, addToast]);
+  }, [translation, isHistoryOpen, isShortcutsOpen, isNotionModalOpen, addToast]);
 
   useEffect(() => {
     setDraftInput(inputText);
@@ -163,9 +168,32 @@ function AppContent() {
   const canTranslate = inputText.trim().length > 0 && !isLoading;
   const canSwap = sourceLanguage.code !== 'auto';
 
+  const handleAddToNotion = async () => {
+    if (!inputText.trim()) {
+      addToast('No text to add to Notion', 'error');
+      return;
+    }
+
+    if (!getNotionEnabled()) {
+      addToast('Notion integration is not enabled', 'error');
+      return;
+    }
+
+    setIsAddingToNotion(true);
+    try {
+      await addToNotion(inputText.trim());
+      addToast('Successfully added to Notion!', 'success');
+    } catch (error) {
+      console.error('Error adding to Notion:', error);
+      addToast(error instanceof Error ? error.message : 'Failed to add to Notion', 'error');
+    } finally {
+      setIsAddingToNotion(false);
+    }
+  };
+
 	return (
 		<div className="min-h-screen bg-dark-bg">
-			<Header />
+			<Header onOpenCustoms={() => setIsNotionModalOpen(true)} />
 			<div className="container mx-auto px-4 py-8 max-w-6xl">
 				{/* Main Translation Interface */}
 				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
@@ -272,6 +300,36 @@ function AppContent() {
           >
             History
           </button>
+
+          {getNotionEnabled() && (
+            <motion.button
+              whileHover={inputText.trim() && !isAddingToNotion ? { scale: 1.02 } : {}}
+              whileTap={inputText.trim() && !isAddingToNotion ? { scale: 0.98 } : {}}
+              type="button"
+              onClick={handleAddToNotion}
+              disabled={!inputText.trim() || isAddingToNotion}
+              className={`px-5 py-2.5 rounded-lg font-medium transition-all duration-200 flex items-center gap-2 ${
+                inputText.trim() && !isAddingToNotion
+                  ? 'bg-gray-800 hover:bg-gray-700 text-gray-100 border border-gray-600 hover:border-gray-500 shadow-lg'
+                  : 'bg-gray-900 text-gray-500 border border-gray-700 cursor-not-allowed opacity-60'
+              }`}
+              title="Add input text to Notion"
+            >
+              <svg 
+                className={`w-4 h-4 ${isAddingToNotion ? 'animate-spin' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                {isAddingToNotion ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                )}
+              </svg>
+              {isAddingToNotion ? 'Adding...' : 'Add to Notion'}
+            </motion.button>
+          )}
         </motion.div>
 
 				{/* History Modal */}
@@ -292,6 +350,8 @@ function AppContent() {
 				/>
 
 				<ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
+
+				<NotionModal isOpen={isNotionModalOpen} onClose={() => setIsNotionModalOpen(false)} />
 
 				{/* Floating help button */}
 				<button

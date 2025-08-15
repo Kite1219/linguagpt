@@ -2,8 +2,7 @@ import { TranslationRequest, TranslationResponse } from '../types';
 
 export const translateText = async (request: TranslationRequest): Promise<TranslationResponse> => {
   try {
-    const apiBase = process.env.REACT_APP_API_BASE || '';
-    const response = await fetch(`${apiBase}/.netlify/functions/translate`, {
+    const response = await fetch('/.netlify/functions/translate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request)
