@@ -16,23 +16,16 @@ const Header: React.FC<HeaderProps> = ({ onOpenShortcuts, onOpenCustoms }) => {
     >
       <div className="container mx-auto px-4 py-4 max-w-6xl">
         <div className="grid grid-cols-3 items-center">
-          {/* Modern Logo */}
+          {/* Logo image */}
           <motion.div
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: 0.2, duration: 0.8, type: "spring", bounce: 0.3 }}
             className="relative justify-self-start"
           >
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <circle cx="16" cy="16" r="14" fill="#111" />
-              <polygon points="16,7 7,24 25,24" fill="#fff" />
-            </svg>
+            <a href="/" aria-label="Go to homepage" className="block">
+              <img src="/logo.png" alt="LinguaGPT logo" className="w-10 h-10 object-contain" />
+            </a>
           </motion.div>
 
           {/* Brand Name */}
