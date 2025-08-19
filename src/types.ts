@@ -26,6 +26,17 @@ export interface OxfordSense {
   examples: string[];
 }
 
+export interface RelatedWord {
+  word: string;
+  type: string; // e.g., "verb", "noun", "adjective"
+  url?: string;
+}
+
+export interface OxfordRelatedSection {
+  title: string; // e.g., "Other results", "Nearby words"
+  words: RelatedWord[];
+}
+
 export interface OxfordEntry {
   head: string;
   pos?: string; // part of speech
@@ -33,6 +44,7 @@ export interface OxfordEntry {
   extra?: string[];
   senses: OxfordSense[];
   url?: string;
+  relatedSections?: OxfordRelatedSection[]; // Related words from sidebar
 }
 
 export interface OxfordLookupResult {

@@ -8,6 +8,9 @@ interface DefinitionsModalProps {
   entry: OxfordEntry | null;
   word: string;
   isLoading: boolean;
+  onWordClick?: (word: string) => void; // For navigating to related words
+  canGoBack?: boolean;
+  onGoBack?: () => void;
 }
 
 const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
@@ -15,7 +18,10 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
   onClose,
   entry,
   word,
-  isLoading
+  isLoading,
+  onWordClick,
+  canGoBack,
+  onGoBack
 }) => {
   const handlePronunciation = (wordToSpeak: string) => {
     if ('speechSynthesis' in window) {
@@ -74,36 +80,52 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-dark-border">
-            <div>
-              <h2 className="text-xl font-semibold text-dark-text">
-                Dictionary: "{word}"
-              </h2>
-              {entry && (
-                <div className="flex items-center gap-3 mt-2 text-sm text-dark-textMuted">
-                  {entry.pos && (
-                    <span className="px-2 py-1 bg-dark-accent bg-opacity-20 text-dark-accent rounded">
-                      {entry.pos}
-                    </span>
-                  )}
-                  {entry.phon && (
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-dark-textMuted">
-                        /{entry.phon}/
-                      </span>
-                      <button
-                        onClick={() => handlePronunciation(entry.head)}
-                        className="p-1.5 rounded-full hover:bg-dark-accent hover:bg-opacity-20 transition-all duration-200 text-dark-accent hover:text-dark-accentHover hover:scale-110 active:scale-95"
-                        title={`🔊 Listen to pronunciation of "${entry.head}"`}
-                      >
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
+            <div className="flex items-center gap-3">
+              {/* Navigation buttons */}
+              {canGoBack && (
+                <button
+                  onClick={onGoBack}
+                  className="p-2 hover:bg-dark-bg rounded-lg transition-colors text-dark-accent hover:text-dark-accentHover"
+                  title="Go back to previous word"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
               )}
+              
+              <div>
+                <h2 className="text-xl font-semibold text-dark-text">
+                  Dictionary: "{word}"
+                </h2>
+                {entry && (
+                  <div className="flex items-center gap-3 mt-2 text-sm text-dark-textMuted">
+                    {entry.pos && (
+                      <span className="px-2 py-1 bg-dark-accent bg-opacity-20 text-dark-accent rounded">
+                        {entry.pos}
+                      </span>
+                    )}
+                    {entry.phon && (
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-dark-textMuted">
+                          /{entry.phon}/
+                        </span>
+                        <button
+                          onClick={() => handlePronunciation(entry.head)}
+                          className="p-1.5 rounded-full hover:bg-dark-accent hover:bg-opacity-20 transition-all duration-200 text-dark-accent hover:text-dark-accentHover hover:scale-110 active:scale-95"
+                          title={`🔊 Listen to pronunciation of "${entry.head}"`}
+                        >
+                          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
+            
             <button
               onClick={onClose}
               className="p-2 hover:bg-dark-bg rounded-lg transition-colors text-dark-textMuted hover:text-dark-text"
@@ -200,6 +222,40 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                     </div>
                   ))}
                 </div>
+
+                {/* Related Words Sections */}
+                {entry.relatedSections && entry.relatedSections.length > 0 && (
+                  <div className="space-y-6">
+                    {entry.relatedSections.map((section, sectionIndex) => (
+                      <div key={sectionIndex} className="pt-6 border-t border-dark-border">
+                        <h4 className="text-lg font-semibold text-dark-text mb-4">
+                          {section.title}
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2">
+                          {section.words.map((relatedWord, wordIndex) => (
+                            <button
+                              key={wordIndex}
+                              onClick={() => onWordClick?.(relatedWord.word)}
+                              className="text-left p-3 rounded-lg border border-dark-border hover:border-dark-accent hover:bg-dark-accent hover:bg-opacity-10 transition-all duration-200 group"
+                              title={`Look up "${relatedWord.word}"`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-dark-text group-hover:text-dark-accent font-medium">
+                                  {relatedWord.word}
+                                </span>
+                                {relatedWord.type && relatedWord.type !== 'word' && relatedWord.type !== 'related' && (
+                                  <span className="text-xs text-dark-textMuted px-2 py-1 bg-dark-bg rounded">
+                                    {relatedWord.type}
+                                  </span>
+                                )}
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Oxford link */}
                 {entry.url && (

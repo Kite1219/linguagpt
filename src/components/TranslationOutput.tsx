@@ -23,6 +23,7 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
   const [oxfordEntry, setOxfordEntry] = useState<OxfordEntry | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
   const [lookupTerm, setLookupTerm] = useState('');
+  const [wordHistory, setWordHistory] = useState<string[]>([]); // Navigation history
 
   const copyToClipboard = async () => {
     if (translation?.translatedText) {
@@ -67,13 +68,44 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
       return;
     }
 
-    setLookupTerm(phrase);
-    setIsLookingUp(true);
     setIsDefinitionsModalOpen(true);
+    setWordHistory([]); // Reset history for new lookup
+    await lookupWord(phrase, false); // Don't add to history for initial lookup
+  };
+
+  const closeDefinitionsModal = () => {
+    setIsDefinitionsModalOpen(false);
+    setOxfordEntry(null);
+    setWordHistory([]);
+  };
+
+  // Function to lookup any word (used for both initial and related word lookups)
+  const lookupWord = async (word: string, addToHistory: boolean = true) => {
+    const sanitizedWord = word
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z\-\s']/gi, '')
+      .trim();
+
+    if (!sanitizedWord) {
+      addToast('Invalid word to lookup', 'error');
+      return;
+    }
+
+    if (addToHistory && lookupTerm) {
+      setWordHistory(prev => [...prev, lookupTerm]);
+    }
+
+    setLookupTerm(sanitizedWord);
+    setIsLookingUp(true);
+    
     try {
-      const entry = await lookupSingleWord(phrase);
+      const entry = await lookupSingleWord(sanitizedWord);
       setOxfordEntry(entry);
-      if (!entry) addToast(`No dictionary entry found for "${phrase}"`, 'info');
+      
+      if (!entry) {
+        addToast(`No dictionary entry found for "${sanitizedWord}"`, 'info');
+      }
     } catch (error) {
       console.error('Dictionary lookup error:', error);
       addToast('Failed to lookup word definition', 'error');
@@ -82,9 +114,18 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
     }
   };
 
-  const closeDefinitionsModal = () => {
-    setIsDefinitionsModalOpen(false);
-    setOxfordEntry(null);
+  // Handle related word clicks
+  const handleRelatedWordClick = (word: string) => {
+    lookupWord(word, true);
+  };
+
+  // Handle back navigation
+  const handleGoBack = () => {
+    if (wordHistory.length > 0) {
+      const previousWord = wordHistory[wordHistory.length - 1];
+      setWordHistory(prev => prev.slice(0, -1));
+      lookupWord(previousWord, false);
+    }
   };
 
   // Decide if dictionary is available based on language
@@ -199,7 +240,16 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
         </AnimatePresence>
       </div>
 
-      <DefinitionsModal isOpen={isDefinitionsModalOpen} onClose={closeDefinitionsModal} entry={oxfordEntry} word={lookupTerm} isLoading={isLookingUp} />
+      <DefinitionsModal 
+        isOpen={isDefinitionsModalOpen} 
+        onClose={closeDefinitionsModal} 
+        entry={oxfordEntry} 
+        word={lookupTerm} 
+        isLoading={isLookingUp}
+        onWordClick={handleRelatedWordClick}
+        canGoBack={wordHistory.length > 0}
+        onGoBack={handleGoBack}
+      />
     </div>
   );
 };

@@ -206,11 +206,166 @@ function scrape(html) {
   
   console.log(`Found ${senses.length} senses`);
   
+  // Extract related words sections from sidebar
+  const relatedSections = [];
+  
+  // Look for "Other results" section
+  const otherResultsSelectors = [
+    '.other-results',
+    '.sidebar .other-results',
+    'div[class*="other"]',
+    '.results-sidebar'
+  ];
+  
+  for (const selector of otherResultsSelectors) {
+    const section = $(selector);
+    if (section.length > 0) {
+      console.log(`Found other results section with selector: ${selector}`);
+      
+      // Extract section title
+      const titleSelectors = ['h3', 'h4', '.title', '.section-title'];
+      let sectionTitle = 'Other results';
+      for (const titleSel of titleSelectors) {
+        const title = section.find(titleSel).first().text().trim();
+        if (title && title.length < 50) {
+          sectionTitle = title;
+          break;
+        }
+      }
+      
+      // Extract related words
+      const words = [];
+      const wordSelectors = [
+        'a[href*="/definition/english/"]',
+        '.related-word',
+        '.word-link'
+      ];
+      
+      for (const wordSel of wordSelectors) {
+        section.find(wordSel).each((i, link) => {
+          const $link = $(link);
+          const word = $link.text().trim();
+          const href = $link.attr('href');
+          const type = $link.find('.pos, .type').text().trim() || 
+                      $link.next('.pos, .type').text().trim() || 
+                      $link.parent().find('.pos, .type').text().trim() || '';
+          
+          if (word && words.length < 10) { // Limit to 10 related words
+            words.push({
+              word,
+              type: type || 'word',
+              url: href ? (href.startsWith('http') ? href : `${OXFORD_BASE}${href}`) : undefined
+            });
+          }
+        });
+        if (words.length > 0) break;
+      }
+      
+      if (words.length > 0) {
+        relatedSections.push({
+          title: sectionTitle,
+          words
+        });
+      }
+      break;
+    }
+  }
+  
+  // Look for "Nearby words" section
+  const nearbySelectors = [
+    '.nearby-words',
+    '.sidebar .nearby',
+    'div[class*="nearby"]',
+    '.related-words'
+  ];
+  
+  for (const selector of nearbySelectors) {
+    const section = $(selector);
+    if (section.length > 0) {
+      console.log(`Found nearby words section with selector: ${selector}`);
+      
+      const sectionTitle = section.find('h3, h4, .title').first().text().trim() || 'Nearby words';
+      const words = [];
+      
+      section.find('a[href*="/definition/english/"]').each((i, link) => {
+        const $link = $(link);
+        const word = $link.text().trim();
+        const href = $link.attr('href');
+        const type = $link.find('.pos').text().trim() || '';
+        
+        if (word && words.length < 10) {
+          words.push({
+            word,
+            type: type || 'word',
+            url: href ? (href.startsWith('http') ? href : `${OXFORD_BASE}${href}`) : undefined
+          });
+        }
+      });
+      
+      if (words.length > 0) {
+        relatedSections.push({
+          title: sectionTitle,
+          words
+        });
+      }
+      break;
+    }
+  }
+  
+  // Look for any other sidebar sections with word links
+  const sidebarSelectors = [
+    '.sidebar',
+    '.right-column',
+    '.related-content',
+    'aside'
+  ];
+  
+  for (const selector of sidebarSelectors) {
+    const sidebar = $(selector);
+    if (sidebar.length > 0 && relatedSections.length < 3) { // Max 3 sections
+      console.log(`Checking sidebar with selector: ${selector}`);
+      
+      // Look for sections within sidebar
+      sidebar.find('div, section').each((i, section) => {
+        const $section = $(section);
+        const title = $section.find('h3, h4, .title').first().text().trim();
+        const links = $section.find('a[href*="/definition/english/"]');
+        
+        if (title && links.length > 0 && title.length < 50) {
+          const words = [];
+          links.each((j, link) => {
+            const $link = $(link);
+            const word = $link.text().trim();
+            const href = $link.attr('href');
+            
+            if (word && words.length < 8) {
+              words.push({
+                word,
+                type: 'related',
+                url: href ? (href.startsWith('http') ? href : `${OXFORD_BASE}${href}`) : undefined
+              });
+            }
+          });
+          
+          if (words.length > 0) {
+            relatedSections.push({
+              title,
+              words
+            });
+          }
+        }
+      });
+    }
+  }
+  
+  console.log(`Found ${relatedSections.length} related sections`);
+  
   return {
     head,
     pos: pos || undefined,
     phon: phon || undefined,
-    senses
+    senses,
+    relatedSections: relatedSections.length > 0 ? relatedSections : undefined
   };
 }
 
