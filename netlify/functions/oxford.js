@@ -246,9 +246,17 @@ function scrape(html) {
     }
   }
 
-  // Try explicit headings first
-  parseSectionByHeading(/other results/i, 'Other results');
-  parseSectionByHeading(/nearby words/i, 'Nearby words');
+  // Try explicit headings first (dedupe by title)
+  const before = new Set();
+  function addSectionOnce(regex, title) {
+    const countBefore = relatedSections.length;
+    parseSectionByHeading(regex, title);
+    if (relatedSections.length > countBefore) {
+      before.add((relatedSections[relatedSections.length - 1].title || title).toLowerCase());
+    }
+  }
+  addSectionOnce(/other results/i, 'Other results');
+  addSectionOnce(/nearby words/i, 'Nearby words');
 
   // Fallback: scan right column like aside/sidebar containers
   if (relatedSections.length < 2) {
@@ -259,8 +267,13 @@ function scrape(html) {
         const title = $sec.find('h3, h4').first().text().trim();
         if (!title) return;
         if (!/other results|nearby words/i.test(title)) return;
+        const key = title.toLowerCase();
+        if (before.has(key)) return;
         const words = parseLinks($sec);
-        if (words.length > 0) relatedSections.push({ title, words });
+        if (words.length > 0) {
+          relatedSections.push({ title, words });
+          before.add(key);
+        }
       });
     }
   }

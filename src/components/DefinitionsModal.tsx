@@ -76,7 +76,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-dark-card border border-dark-border rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-hidden"
+          className="bg-dark-card border border-dark-border rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-dark-border">
@@ -99,9 +99,9 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                   Dictionary: "{word}"
                 </h2>
                 {entry && (
-                  <div className="flex items-center gap-3 mt-2 text-sm text-dark-textMuted">
+                  <div className="flex items-center gap-3 mt-2 text-dark-textMuted">
                     {entry.pos && (
-                      <span className="px-2 py-1 bg-dark-accent bg-opacity-20 text-dark-accent rounded">
+                      <span className="px-2 py-1 bg-dark-accent bg-opacity-20 text-dark-accent rounded text-sm">
                         {entry.pos}
                       </span>
                     )}
@@ -137,7 +137,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[60vh] grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
+          <div className="p-6 overflow-y-auto max-h-[60vh] grid grid-cols-1 lg:grid-cols-[minmax(560px,1fr)_320px] gap-10">
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="flex items-center space-x-3">
@@ -165,7 +165,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
               <div className="space-y-6 min-w-0">
                 {/* Main word info */}
                 <div>
-                  <h3 className="text-2xl font-bold text-dark-text mb-2">
+                  <h3 className="text-3xl font-bold text-dark-text mb-2">
                     {entry.head}
                   </h3>
                   
@@ -182,7 +182,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
 
                 {/* Definitions */}
                 <div className="space-y-4">
-                  <h4 className="text-lg font-semibold text-dark-text">Definitions</h4>
+                  <h4 className="text-xl font-semibold text-dark-text">Definitions</h4>
                   {entry.senses.map((sense, index) => (
                     <div key={index} className="border-l-2 border-dark-accent border-opacity-30 pl-4">
                       <div className="flex items-start gap-2 mb-2">
@@ -195,7 +195,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                           </p>
                           
                           {sense.label && (
-                            <span className="inline-block mt-1 px-2 py-1 bg-dark-bg text-xs text-dark-textMuted rounded">
+                            <span className="inline-block mt-1 px-2 py-1 bg-dark-bg text-sm text-dark-textMuted rounded">
                               {sense.label}
                             </span>
                           )}
@@ -248,7 +248,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                 {entry.relatedSections && entry.relatedSections.length > 0 && (
                   entry.relatedSections.map((section, sectionIndex) => (
                     <div key={sectionIndex}>
-                      <h5 className="text-sm font-semibold text-dark-text mb-2">
+                      <h5 className="text-sm font-semibold text-dark-text mb-2 opacity-80">
                         {section.title}
                       </h5>
                       <div className="flex flex-col gap-1">
@@ -259,11 +259,11 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                             className="text-left px-3 py-2 rounded-md hover:bg-dark-accent hover:bg-opacity-10 transition-colors group"
                             title={`Look up "${relatedWord.word}"`}
                           >
-                            <span className="text-dark-text group-hover:text-dark-accent font-medium mr-2">
+                            <span className="text-dark-text group-hover:text-dark-accent font-medium mr-2 text-[15px]">
                               {relatedWord.word}
                             </span>
                             {relatedWord.type && relatedWord.type !== 'word' && relatedWord.type !== 'related' && (
-                              <span className="text-[10px] text-dark-textMuted opacity-70 align-middle">
+                              <span className="text-xs text-dark-textMuted opacity-70 align-middle">
                                 {relatedWord.type}
                               </span>
                             )}
