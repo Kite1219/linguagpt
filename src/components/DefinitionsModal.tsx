@@ -137,7 +137,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[60vh]">
+          <div className="p-6 overflow-y-auto max-h-[60vh] grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-8">
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="flex items-center space-x-3">
@@ -160,7 +160,9 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
             )}
 
             {!isLoading && entry && (
-              <div className="space-y-6">
+              <>
+              {/* Left column: main content */}
+              <div className="space-y-6 min-w-0">
                 {/* Main word info */}
                 <div>
                   <h3 className="text-2xl font-bold text-dark-text mb-2">
@@ -223,40 +225,6 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                   ))}
                 </div>
 
-                {/* Related Words Sections */}
-                {entry.relatedSections && entry.relatedSections.length > 0 && (
-                  <div className="space-y-6">
-                    {entry.relatedSections.map((section, sectionIndex) => (
-                      <div key={sectionIndex} className="pt-6 border-t border-dark-border">
-                        <h4 className="text-lg font-semibold text-dark-text mb-4">
-                          {section.title}
-                        </h4>
-                        <div className="grid grid-cols-2 gap-2">
-                          {section.words.map((relatedWord, wordIndex) => (
-                            <button
-                              key={wordIndex}
-                              onClick={() => onWordClick?.(relatedWord.word)}
-                              className="text-left p-3 rounded-lg border border-dark-border hover:border-dark-accent hover:bg-dark-accent hover:bg-opacity-10 transition-all duration-200 group"
-                              title={`Look up "${relatedWord.word}"`}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="text-dark-text group-hover:text-dark-accent font-medium">
-                                  {relatedWord.word}
-                                </span>
-                                {relatedWord.type && relatedWord.type !== 'word' && relatedWord.type !== 'related' && (
-                                  <span className="text-xs text-dark-textMuted px-2 py-1 bg-dark-bg rounded">
-                                    {relatedWord.type}
-                                  </span>
-                                )}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
                 {/* Oxford link */}
                 {entry.url && (
                   <div className="pt-4 border-t border-dark-border">
@@ -274,6 +242,39 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* Right column: related sections */}
+              <aside className="space-y-6">
+                {entry.relatedSections && entry.relatedSections.length > 0 && (
+                  entry.relatedSections.map((section, sectionIndex) => (
+                    <div key={sectionIndex}>
+                      <h5 className="text-sm font-semibold text-dark-text mb-2">
+                        {section.title}
+                      </h5>
+                      <div className="flex flex-col gap-1">
+                        {section.words.map((relatedWord, wordIndex) => (
+                          <button
+                            key={wordIndex}
+                            onClick={() => onWordClick?.(relatedWord.word)}
+                            className="text-left px-3 py-2 rounded-md hover:bg-dark-accent hover:bg-opacity-10 transition-colors group"
+                            title={`Look up "${relatedWord.word}"`}
+                          >
+                            <span className="text-dark-text group-hover:text-dark-accent font-medium mr-2">
+                              {relatedWord.word}
+                            </span>
+                            {relatedWord.type && relatedWord.type !== 'word' && relatedWord.type !== 'related' && (
+                              <span className="text-[10px] text-dark-textMuted opacity-70 align-middle">
+                                {relatedWord.type}
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
+              </aside>
+              </>
             )}
           </div>
         </motion.div>
