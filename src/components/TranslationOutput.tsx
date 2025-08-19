@@ -1,30 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TranslationResponse, OxfordEntry } from '../types';
+import { TranslationResponse } from '../types';
 import { useToast } from '../contexts/ToastContext';
-import { lookupSingleWord } from '../services/oxford';
-import DefinitionsModal from './DefinitionsModal';
-import { getDictionaryEnabled } from '../services/preferences';
 
 interface TranslationOutputProps {
   translation: TranslationResponse | null;
   isLoading: boolean;
   onClear?: () => void;
-  inputText?: string; // Add input text to determine what word to lookup
 }
 
 const TranslationOutput: React.FC<TranslationOutputProps> = ({
   translation,
   isLoading,
-  onClear,
-  inputText
+  onClear
 }) => {
   const { addToast } = useToast();
-  const [isDefinitionsModalOpen, setIsDefinitionsModalOpen] = useState(false);
-  const [oxfordEntry, setOxfordEntry] = useState<OxfordEntry | null>(null);
-  const [isLookingUp, setIsLookingUp] = useState(false);
-  const [lookupTerm, setLookupTerm] = useState('');
-  const [wordHistory, setWordHistory] = useState<string[]>([]); // Navigation history
 
   const copyToClipboard = async () => {
     if (translation?.translatedText) {
@@ -45,115 +35,7 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
     }
   };
 
-  const handleDictionaryLookup = async () => {
-    if (!getDictionaryEnabled()) {
-      addToast('Dictionary lookup is disabled. Enable it in Settings.', 'info');
-      return;
-    }
-
-    if (!inputText) {
-      addToast('No input text to lookup', 'error');
-      return;
-    }
-
-    if (!isEnglishSource()) {
-      addToast('Dictionary lookup is only available for English words', 'info');
-      return;
-    }
-
-    // Use the entire phrase (sanitized), not just the first word
-    const phrase = inputText
-      .trim()
-      .replace(/\s+/g, ' ')
-      .toLowerCase()
-      .replace(/[^a-z\-\s']/gi, '') // keep letters, spaces, hyphen and apostrophe
-      .trim();
-
-    if (!phrase) {
-      addToast('No valid word found to lookup', 'error');
-      return;
-    }
-
-    setIsDefinitionsModalOpen(true);
-    setWordHistory([]); // Reset history for new lookup
-    await lookupWord(phrase, false); // Don't add to history for initial lookup
-  };
-
-  const closeDefinitionsModal = () => {
-    setIsDefinitionsModalOpen(false);
-    setOxfordEntry(null);
-    setWordHistory([]);
-  };
-
-  // Function to lookup any word (used for both initial and related word lookups)
-  const lookupWord = async (word: string, addToHistory: boolean = true) => {
-    const sanitizedWord = word
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z\-\s']/gi, '')
-      .trim();
-
-    if (!sanitizedWord) {
-      addToast('Invalid word to lookup', 'error');
-      return;
-    }
-
-    if (addToHistory && lookupTerm) {
-      setWordHistory(prev => [...prev, lookupTerm]);
-    }
-
-    setLookupTerm(sanitizedWord);
-    setIsLookingUp(true);
-    
-    try {
-      const entry = await lookupSingleWord(sanitizedWord);
-      setOxfordEntry(entry);
-      
-      if (!entry) {
-        addToast(`No dictionary entry found for "${sanitizedWord}"`, 'info');
-      }
-    } catch (error) {
-      console.error('Dictionary lookup error:', error);
-      addToast('Failed to lookup word definition', 'error');
-    } finally {
-      setIsLookingUp(false);
-    }
-  };
-
-  // Handle related word clicks
-  const handleRelatedWordClick = (word: string) => {
-    lookupWord(word, true);
-  };
-
-  // Handle back navigation
-  const handleGoBack = () => {
-    if (wordHistory.length > 0) {
-      const previousWord = wordHistory[wordHistory.length - 1];
-      setWordHistory(prev => prev.slice(0, -1));
-      lookupWord(previousWord, false);
-    }
-  };
-
-  // Decide if dictionary is available based on language
-  const isEnglishSource = () => {
-    if (!translation) return false;
-
-    const src = (translation.sourceLanguage || '').toLowerCase();
-    const detectedCode = (translation.detectedLanguageCode || '').toLowerCase();
-    const detectedName = (translation.detectedLanguageName || '').toLowerCase();
-
-    // If explicit English
-    if (src.includes('english') || src === 'en') return true;
-
-    // If auto-detect, rely on detected language fields
-    if (src === 'auto-detect' || src === 'detect language' || src === 'auto') {
-      if (detectedCode === 'en') return true;
-      if (detectedName.includes('english')) return true;
-      return false;
-    }
-
-    return false;
-  };
+  // Dictionary lookup has been removed from the output component. It is now only available in the input.
 
   return (
     <div className="space-y-2">
@@ -230,16 +112,6 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
         </AnimatePresence>
       </div>
 
-      <DefinitionsModal 
-        isOpen={isDefinitionsModalOpen} 
-        onClose={closeDefinitionsModal} 
-        entry={oxfordEntry} 
-        word={lookupTerm} 
-        isLoading={isLookingUp}
-        onWordClick={handleRelatedWordClick}
-        canGoBack={wordHistory.length > 0}
-        onGoBack={handleGoBack}
-      />
     </div>
   );
 };

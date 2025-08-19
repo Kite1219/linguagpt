@@ -242,7 +242,6 @@ function AppContent() {
               translation={translation}
               isLoading={isLoading}
               onClear={() => setTranslation(null)}
-              inputText={inputText}
             />
           </motion.div>
         </div>
