@@ -1,20 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TranslationResponse } from '../types';
+import { TranslationResponse, OxfordEntry } from '../types';
 import { useToast } from '../contexts/ToastContext';
+import { lookupSingleWord } from '../services/oxford';
+import DefinitionsModal from './DefinitionsModal';
 
 interface TranslationOutputProps {
   translation: TranslationResponse | null;
   isLoading: boolean;
   onClear?: () => void;
+  inputText?: string; // Add input text to determine what word to lookup
 }
 
 const TranslationOutput: React.FC<TranslationOutputProps> = ({
   translation,
   isLoading,
-  onClear
+  onClear,
+  inputText
 }) => {
   const { addToast } = useToast();
+  const [isDefinitionsModalOpen, setIsDefinitionsModalOpen] = useState(false);
+  const [oxfordEntry, setOxfordEntry] = useState<OxfordEntry | null>(null);
+  const [isLookingUp, setIsLookingUp] = useState(false);
 
   const copyToClipboard = async () => {
     if (translation?.translatedText) {
@@ -33,6 +40,49 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
       onClear();
       addToast('Output cleared', 'info');
     }
+  };
+
+  const handleShowMore = async () => {
+    if (!inputText) {
+      addToast('No input text to lookup', 'error');
+      return;
+    }
+
+    // Only show for English input (source) since Oxford only has English
+    if (translation?.sourceLanguage !== 'English' && translation?.sourceLanguage !== 'Auto-detect') {
+      addToast('Dictionary lookup is only available for English words', 'info');
+      return;
+    }
+
+    // Extract the first word from input (simple approach)
+    const firstWord = inputText.trim().split(/\s+/)[0].toLowerCase().replace(/[^\w]/g, '');
+    
+    if (!firstWord) {
+      addToast('No valid word found to lookup', 'error');
+      return;
+    }
+
+    setIsLookingUp(true);
+    setIsDefinitionsModalOpen(true);
+    
+    try {
+      const entry = await lookupSingleWord(firstWord);
+      setOxfordEntry(entry);
+      
+      if (!entry) {
+        addToast(`No dictionary entry found for "${firstWord}"`, 'info');
+      }
+    } catch (error) {
+      console.error('Dictionary lookup error:', error);
+      addToast('Failed to lookup word definition', 'error');
+    } finally {
+      setIsLookingUp(false);
+    }
+  };
+
+  const closeDefinitionsModal = () => {
+    setIsDefinitionsModalOpen(false);
+    setOxfordEntry(null);
   };
 
   return (
@@ -126,17 +176,52 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
               transition={{ duration: 0.5, ease: "easeOut" }}
               className="h-full flex flex-col"
             >
-              <div className="text-dark-text leading-relaxed whitespace-pre-wrap flex-1 overflow-auto pr-2 pb-8">
+              <div className="text-dark-text leading-relaxed whitespace-pre-wrap flex-1 overflow-auto pr-2 pb-16">
                 {translation.translatedText}
               </div>
               
-              <div className="absolute bottom-3 right-3 text-xs text-dark-textMuted opacity-30">
-                {translation.sourceLanguage} → {translation.targetLanguage}
+              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                <div className="text-xs text-dark-textMuted opacity-30">
+                  {translation.sourceLanguage} → {translation.targetLanguage}
+                </div>
+                
+                {/* Show More button - only for English source */}
+                {inputText && (translation.sourceLanguage === 'English' || translation.sourceLanguage === 'Auto-detect') && (
+                  <button
+                    onClick={handleShowMore}
+                    disabled={isLookingUp}
+                    className="px-3 py-1.5 text-xs bg-dark-accent bg-opacity-20 hover:bg-opacity-30 text-dark-accent rounded-md transition-all duration-200 flex items-center gap-1"
+                    title="Show definitions and examples"
+                  >
+                    {isLookingUp ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border border-dark-accent border-t-transparent"></div>
+                        Looking up...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                        </svg>
+                        Show More
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+      
+      {/* Definitions Modal */}
+      <DefinitionsModal
+        isOpen={isDefinitionsModalOpen}
+        onClose={closeDefinitionsModal}
+        entry={oxfordEntry}
+        word={inputText ? inputText.trim().split(/\s+/)[0] : ''}
+        isLoading={isLookingUp}
+      />
     </div>
   );
 };

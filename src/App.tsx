@@ -8,6 +8,7 @@ import HistoryModal from './components/HistoryModal';
 import ShortcutsModal from './components/ShortcutsModal';
 import NotionModal from './components/NotionModal';
 import ToastContainer from './components/ToastContainer';
+import TestInterface from './components/TestInterface';
 import { translateText } from './services/openai';
 import { Language, TranslationResponse } from './types';
 import { addToHistory, getHistory, HistoryItem, clearHistory, findCachedTranslation } from './services/history';
@@ -241,6 +242,7 @@ function AppContent() {
               translation={translation}
               isLoading={isLoading}
               onClear={() => setTranslation(null)}
+              inputText={inputText}
             />
           </motion.div>
         </div>
@@ -365,6 +367,9 @@ function AppContent() {
 
 				{/* Toast Notifications */}
 				<ToastContainer />
+
+				{/* Test Interface (development only) */}
+				<TestInterface />
 
       </div>
     </div>

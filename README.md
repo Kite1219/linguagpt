@@ -7,11 +7,17 @@ A beautiful, minimalist translation app built with React, TypeScript, and powere
 - ✨ Clean, modern UI with dark theme
 - 🌍 Support for 35+ languages
 - 🤖 Powered by OpenAI GPT-4o-mini for accurate translations
+- 📖 **NEW!** Oxford Dictionary integration with "Show More" button
+  - Word definitions, pronunciation, and examples
+  - Multiple senses and usage labels
+  - Direct links to Oxford Learner's Dictionary
+  - Available for English words only
 - 🎭 Smooth animations with Framer Motion
 - 📱 Fully responsive design
 - 🔄 Language swap functionality
 - 📋 Copy to clipboard feature
 - 🔍 Searchable language selection modal
+- 🧪 Development test interface for dictionary features
 
 ## Tech Stack
 
@@ -56,6 +62,18 @@ npm start
 4. Click "Translate" to get your translation
 5. Use the copy button to copy the translated text
 6. Use the swap button to quickly reverse translation direction
+7. **NEW!** For English words, click "Show More" to see:
+   - Detailed definitions from Oxford Dictionary
+   - Pronunciation guide (IPA)
+   - Multiple word senses and meanings
+   - Usage examples and synonyms
+   - Part of speech information
+
+### Testing Dictionary Features
+
+**Local Development**: Dictionary features require Netlify deployment to work properly.
+
+**After Deployment**: The "Show More" button will fetch real Oxford Dictionary data for any English word.
 
 ## Design Principles
 
@@ -71,6 +89,19 @@ npm start
 - `npm run build` - Builds the app for production
 - `npm test` - Launches the test runner
 - `npm run eject` - Ejects from Create React App
+
+## Deployment
+
+This app is designed for deployment on Netlify. See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
+
+### Quick Deploy to Netlify
+
+1. Push your code to GitHub
+2. Connect to Netlify
+3. Set `OPENAI_API_KEY` environment variable
+4. Deploy!
+
+The Oxford Dictionary feature will only work after deployment to Netlify.
 
 ## License
 
