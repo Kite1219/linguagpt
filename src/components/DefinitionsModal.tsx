@@ -137,7 +137,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto overflow-x-auto max-h-[65vh] grid grid-cols-1 lg:grid-cols-[minmax(600px,2fr)_350px] gap-12">
+          <div className="p-6 overflow-y-auto overflow-x-hidden max-h-[65vh] grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_350px] gap-12">
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="flex items-center space-x-3">
