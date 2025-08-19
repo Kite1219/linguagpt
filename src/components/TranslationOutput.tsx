@@ -87,15 +87,17 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
 
   // Helper function to check if the source language supports dictionary lookup
   const isEnglishSource = () => {
-    if (!translation?.sourceLanguage) return false;
-    
-    const sourceLang = translation.sourceLanguage.toLowerCase();
-    
-    // Simple check: show for English or Auto-detect
+    const label = translation?.sourceLanguage?.toLowerCase() || '';
+    if (!label) return false;
+
+    // Accept English, Auto-detect, Detect Language (native label), 'auto', 'en', etc.
     return (
-      sourceLang === 'english' || 
-      sourceLang === 'auto-detect' ||
-      sourceLang.includes('english')
+      label === 'english' ||
+      label === 'auto-detect' ||
+      label === 'detect language' ||
+      label === 'auto' ||
+      label.startsWith('en') ||
+      label.includes('english')
     );
   };
 
@@ -199,7 +201,7 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
                   {translation.sourceLanguage} → {translation.targetLanguage}
                 </div>
                 
-                {/* Show More button - only for English source */}
+                {/* Show More button */}
                 {inputText && isEnglishSource() && (
                   <button
                     onClick={handleShowMore}

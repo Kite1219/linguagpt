@@ -56,9 +56,15 @@ ${text}`;
 
     const translatedText = completion.choices?.[0]?.message?.content?.trim() || '';
 
+    // Normalize source language label in the response
+    const requestedSource = (sourceLanguage || '').toString();
+    const normalizedSource = requestedSource.trim().length === 0
+      ? 'Auto-detect'
+      : (/auto|detect/i.test(requestedSource) ? 'Auto-detect' : requestedSource);
+
     const body = JSON.stringify({
       translatedText,
-      sourceLanguage: sourceLanguage || 'Auto-detect',
+      sourceLanguage: normalizedSource,
       targetLanguage
     });
 
