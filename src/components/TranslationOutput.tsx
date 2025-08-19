@@ -22,6 +22,7 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
   const [isDefinitionsModalOpen, setIsDefinitionsModalOpen] = useState(false);
   const [oxfordEntry, setOxfordEntry] = useState<OxfordEntry | null>(null);
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [lookupTerm, setLookupTerm] = useState('');
 
   const copyToClipboard = async () => {
     if (translation?.translatedText) {
@@ -53,18 +54,26 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
       return;
     }
 
-    const firstWord = inputText.trim().split(/\s+/)[0].toLowerCase().replace(/[^\w]/g, '');
-    if (!firstWord) {
+    // Use the entire phrase (sanitized), not just the first word
+    const phrase = inputText
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toLowerCase()
+      .replace(/[^a-z\-\s']/gi, '') // keep letters, spaces, hyphen and apostrophe
+      .trim();
+
+    if (!phrase) {
       addToast('No valid word found to lookup', 'error');
       return;
     }
 
+    setLookupTerm(phrase);
     setIsLookingUp(true);
     setIsDefinitionsModalOpen(true);
     try {
-      const entry = await lookupSingleWord(firstWord);
+      const entry = await lookupSingleWord(phrase);
       setOxfordEntry(entry);
-      if (!entry) addToast(`No dictionary entry found for "${firstWord}"`, 'info');
+      if (!entry) addToast(`No dictionary entry found for "${phrase}"`, 'info');
     } catch (error) {
       console.error('Dictionary lookup error:', error);
       addToast('Failed to lookup word definition', 'error');
@@ -190,7 +199,7 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
         </AnimatePresence>
       </div>
 
-      <DefinitionsModal isOpen={isDefinitionsModalOpen} onClose={closeDefinitionsModal} entry={oxfordEntry} word={inputText ? inputText.trim().split(/\s+/)[0] : ''} isLoading={isLookingUp} />
+      <DefinitionsModal isOpen={isDefinitionsModalOpen} onClose={closeDefinitionsModal} entry={oxfordEntry} word={lookupTerm} isLoading={isLookingUp} />
     </div>
   );
 };
