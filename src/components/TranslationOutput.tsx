@@ -90,24 +90,13 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
     if (!translation?.sourceLanguage) return false;
     
     const sourceLang = translation.sourceLanguage.toLowerCase();
-    console.log('Debug - sourceLanguage:', translation.sourceLanguage, 'sourceLang:', sourceLang);
     
-    // Check for various ways English might be indicated
-    const isEnglish = (
+    // Simple check: show for English or Auto-detect
+    return (
       sourceLang === 'english' || 
       sourceLang === 'auto-detect' ||
-      sourceLang.includes('english') ||
-      sourceLang === 'en' ||
-      sourceLang === 'en-us' ||
-      sourceLang === 'en-gb' ||
-      sourceLang.startsWith('en-')
+      sourceLang.includes('english')
     );
-    
-    // For auto-detect, always show the button - let the Oxford API handle the validation
-    const shouldShow = isEnglish || sourceLang === 'auto-detect';
-    
-    console.log('Debug - isEnglish:', isEnglish, 'shouldShow:', shouldShow);
-    return shouldShow;
   };
 
   return (
@@ -211,14 +200,7 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
                 </div>
                 
                 {/* Show More button - only for English source */}
-                {(() => {
-                  console.log('Debug - Button render check:', {
-                    inputText: !!inputText,
-                    translation: translation,
-                    isEnglishSource: translation ? isEnglishSource() : 'no translation'
-                  });
-                  return inputText && isEnglishSource();
-                })() && (
+                {inputText && isEnglishSource() && (
                   <button
                     onClick={handleShowMore}
                     disabled={isLookingUp}
