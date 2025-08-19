@@ -48,15 +48,12 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
       return;
     }
 
-    // Only show for English input (source) since Oxford only has English
     if (!isEnglishSource()) {
       addToast('Dictionary lookup is only available for English words', 'info');
       return;
     }
 
-    // Extract the first word from input (simple approach)
     const firstWord = inputText.trim().split(/\s+/)[0].toLowerCase().replace(/[^\w]/g, '');
-    
     if (!firstWord) {
       addToast('No valid word found to lookup', 'error');
       return;
@@ -64,14 +61,10 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
 
     setIsLookingUp(true);
     setIsDefinitionsModalOpen(true);
-    
     try {
       const entry = await lookupSingleWord(firstWord);
       setOxfordEntry(entry);
-      
-      if (!entry) {
-        addToast(`No dictionary entry found for "${firstWord}"`, 'info');
-      }
+      if (!entry) addToast(`No dictionary entry found for "${firstWord}"`, 'info');
     } catch (error) {
       console.error('Dictionary lookup error:', error);
       addToast('Failed to lookup word definition', 'error');
@@ -85,28 +78,31 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
     setOxfordEntry(null);
   };
 
-  // Helper function to check if the source language supports dictionary lookup
+  // Decide if dictionary is available based on language
   const isEnglishSource = () => {
-    const label = translation?.sourceLanguage?.toLowerCase() || '';
-    if (!label) return false;
+    if (!translation) return false;
 
-    // Accept English, Auto-detect, Detect Language (native label), 'auto', 'en', etc.
-    return (
-      label === 'english' ||
-      label === 'auto-detect' ||
-      label === 'detect language' ||
-      label === 'auto' ||
-      label.startsWith('en') ||
-      label.includes('english')
-    );
+    const src = (translation.sourceLanguage || '').toLowerCase();
+    const detectedCode = (translation.detectedLanguageCode || '').toLowerCase();
+    const detectedName = (translation.detectedLanguageName || '').toLowerCase();
+
+    // If explicit English
+    if (src.includes('english') || src === 'en') return true;
+
+    // If auto-detect, rely on detected language fields
+    if (src === 'auto-detect' || src === 'detect language' || src === 'auto') {
+      if (detectedCode === 'en') return true;
+      if (detectedName.includes('english')) return true;
+      return false;
+    }
+
+    return false;
   };
 
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="block text-sm font-medium text-dark-textMuted">
-          Translation
-        </label>
+        <label className="block text-sm font-medium text-dark-textMuted">Translation</label>
         <div className="flex items-center gap-2">
           <button
             onClick={copyToClipboard}
@@ -138,17 +134,11 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
           )}
         </div>
       </div>
-      
+
       <div className="bg-dark-card border border-dark-border rounded-[0.1rem] p-4 relative h-[360px] md:h-[420px]">
         <AnimatePresence mode="wait">
           {isLoading && (
-            <motion.div
-              key="loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center h-full"
-            >
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center h-full">
               <div className="flex items-center space-x-3">
                 <div className="animate-spin rounded-full h-6 w-6 border-2 border-dark-accent border-t-transparent"></div>
                 <span className="text-dark-textMuted">Translating...</span>
@@ -157,26 +147,10 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
           )}
 
           {!isLoading && !translation && (
-            <motion.div
-              key="empty"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="flex items-center justify-center h-full"
-            >
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center justify-center h-full">
               <div className="text-center text-dark-textMuted">
-                <svg
-                  className="mx-auto h-12 w-12 mb-4 opacity-50"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7"
-                  />
+                <svg className="mx-auto h-12 w-12 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 8h10m0 0V6a2 2 0 00-2-2H9a2 2 0 00-2 2v2m10 0v10a2 2 0 01-2 2H9a2 2 0 01-2-2V8m10 0H7" />
                 </svg>
                 <p>Translation will appear here</p>
               </div>
@@ -184,31 +158,17 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
           )}
 
           {!isLoading && translation && (
-            <motion.div
-              key="translation"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-              className="h-full flex flex-col"
-            >
-              <div className="text-dark-text leading-relaxed whitespace-pre-wrap flex-1 overflow-auto pr-2 pb-16">
-                {translation.translatedText}
-              </div>
-              
+            <motion.div key="translation" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5, ease: "easeOut" }} className="h-full flex flex-col">
+              <div className="text-dark-text leading-relaxed whitespace-pre-wrap flex-1 overflow-auto pr-2 pb-16">{translation.translatedText}</div>
+
               <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
                 <div className="text-xs text-dark-textMuted opacity-30">
-                  {translation.sourceLanguage} → {translation.targetLanguage}
+                  {translation.sourceLanguage}
+                  {translation.detectedLanguageName ? ` (${translation.detectedLanguageName})` : ''} → {translation.targetLanguage}
                 </div>
-                
-                {/* Show More button */}
+
                 {inputText && isEnglishSource() && (
-                  <button
-                    onClick={handleShowMore}
-                    disabled={isLookingUp}
-                    className="px-3 py-1.5 text-xs bg-dark-accent bg-opacity-20 hover:bg-opacity-30 text-dark-accent rounded-md transition-all duration-200 flex items-center gap-1"
-                    title="Show definitions and examples"
-                  >
+                  <button onClick={handleShowMore} disabled={isLookingUp} className="px-3 py-1.5 text-xs bg-dark-accent bg-opacity-20 hover:bg-opacity-30 text-dark-accent rounded-md transition-all duration-200 flex items-center gap-1" title="Show definitions and examples">
                     {isLookingUp ? (
                       <>
                         <div className="animate-spin rounded-full h-3 w-3 border border-dark-accent border-t-transparent"></div>
@@ -229,15 +189,8 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
           )}
         </AnimatePresence>
       </div>
-      
-      {/* Definitions Modal */}
-      <DefinitionsModal
-        isOpen={isDefinitionsModalOpen}
-        onClose={closeDefinitionsModal}
-        entry={oxfordEntry}
-        word={inputText ? inputText.trim().split(/\s+/)[0] : ''}
-        isLoading={isLookingUp}
-      />
+
+      <DefinitionsModal isOpen={isDefinitionsModalOpen} onClose={closeDefinitionsModal} entry={oxfordEntry} word={inputText ? inputText.trim().split(/\s+/)[0] : ''} isLoading={isLookingUp} />
     </div>
   );
 };

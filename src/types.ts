@@ -14,6 +14,8 @@ export interface TranslationResponse {
   translatedText: string;
   sourceLanguage: string;
   targetLanguage: string;
+  detectedLanguageCode?: string; // present when source was auto-detected
+  detectedLanguageName?: string; // present when source was auto-detected
 }
 
 // Oxford Dictionary types

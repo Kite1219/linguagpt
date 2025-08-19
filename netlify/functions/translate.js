@@ -7,6 +7,28 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
+const KNOWN_LANGS = [
+  { code: 'en', names: ['english', 'en', 'en-us', 'en-gb'] },
+  { code: 'vi', names: ['vietnamese', 'vi'] },
+  { code: 'es', names: ['spanish', 'es'] },
+  { code: 'fr', names: ['french', 'fr'] },
+  { code: 'de', names: ['german', 'de'] },
+  { code: 'ja', names: ['japanese', 'ja'] },
+  { code: 'ko', names: ['korean', 'ko'] },
+  { code: 'zh', names: ['chinese', 'zh', 'zh-cn', 'zh-tw'] }
+  // keep list short; purpose is only to check for English specifically
+];
+
+function normalizeDetectionLabel(text) {
+  const t = (text || '').toString().trim().toLowerCase();
+  const en = KNOWN_LANGS.find(x => x.code === 'en');
+  if (en && en.names.some(n => t.includes(n))) return { code: 'en', name: 'English' };
+  const hit = KNOWN_LANGS.find(x => x.names.some(n => t.includes(n)));
+  return hit ? { code: hit.code, name: capitalize(hit.names[0]) } : { code: 'unknown', name: 'Unknown' };
+}
+
+function capitalize(s) { return s ? s.charAt(0).toUpperCase() + s.slice(1) : s; }
+
 exports.handler = async (event) => {
   try {
     if (event.httpMethod === 'OPTIONS') {
@@ -29,25 +51,31 @@ exports.handler = async (event) => {
     const { default: OpenAI } = await import('openai');
     const openai = new OpenAI({ apiKey });
 
-    const prompt = `Translate the following text from ${sourceLanguage || 'auto-detected language'} to ${targetLanguage}.
+    // Optional detection when auto-detect is requested
+    let detected = null;
+    const isAuto = !sourceLanguage || /auto|detect/i.test(sourceLanguage);
+    if (isAuto) {
+      const detectPrompt = `What language is the following text written in? Answer with just the language name in English (e.g., English, Vietnamese, Spanish) and nothing else.\n\nText:\n${text.slice(0, 400)}`;
+      const detect = await openai.chat.completions.create({
+        model: 'gpt-4.1-nano',
+        messages: [
+          { role: 'system', content: 'Detect the language of the user text.' },
+          { role: 'user', content: detectPrompt }
+        ],
+        max_tokens: 10,
+        temperature: 0
+      });
+      const label = detect.choices?.[0]?.message?.content?.trim() || '';
+      const normalized = normalizeDetectionLabel(label);
+      detected = normalized;
+    }
 
-Requirements:
-- Preserve ALL original line breaks and spacing exactly where possible.
-- Do not collapse multiple newlines into one.
-- Return ONLY the translated text with the same paragraph and line structure.
-- If the input looks like code or contains indentation, keep the same indentation and line structure.
-
-Text to translate:
-${text}`;
+    const prompt = `Translate the following text from ${sourceLanguage || (detected?.name || 'auto-detected language')} to ${targetLanguage}.\n\nRequirements:\n- Preserve ALL original line breaks and spacing exactly where possible.\n- Do not collapse multiple newlines into one.\n- Return ONLY the translated text with the same paragraph and line structure.\n- If the input looks like code or contains indentation, keep the same indentation and line structure.\n\nText to translate:\n${text}`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4.1-nano',
       messages: [
-        {
-          role: 'system',
-          content:
-            'You are a professional translator. Translate accurately, preserve tone and meaning, and strictly preserve whitespace (line breaks and spacing). Return only the translated text.'
-        },
+        { role: 'system', content: 'You are a professional translator. Translate accurately, preserve tone and meaning, and strictly preserve whitespace (line breaks and spacing). Return only the translated text.' },
         { role: 'user', content: prompt }
       ],
       max_tokens: 1000,
@@ -65,7 +93,9 @@ ${text}`;
     const body = JSON.stringify({
       translatedText,
       sourceLanguage: normalizedSource,
-      targetLanguage
+      targetLanguage,
+      detectedLanguageCode: detected?.code,
+      detectedLanguageName: detected?.name
     });
 
     return {
