@@ -3,6 +3,7 @@ const TARGET_KEY = 'translator_pref_target_lang_v1';
 const NOTION_API_KEY = 'translator_notion_api_key_v1';
 const NOTION_PAGE_ID = 'translator_notion_page_id_v1';
 const NOTION_ENABLED_KEY = 'translator_notion_enabled_v1';
+const DICTIONARY_ENABLED_KEY = 'translator_dictionary_enabled_v1';
 
 export const getPreferredSourceLanguageCode = (): string | null => {
   try {
@@ -94,6 +95,23 @@ export const getNotionEnabled = (): boolean => {
 export const setNotionEnabled = (enabled: boolean): void => {
   try {
     localStorage.setItem(NOTION_ENABLED_KEY, enabled.toString());
+  } catch {
+    // no-op
+  }
+};
+
+// Dictionary preferences
+export const getDictionaryEnabled = (): boolean => {
+  try {
+    return localStorage.getItem(DICTIONARY_ENABLED_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+export const setDictionaryEnabled = (enabled: boolean): void => {
+  try {
+    localStorage.setItem(DICTIONARY_ENABLED_KEY, enabled.toString());
   } catch {
     // no-op
   }

@@ -6,7 +6,9 @@ import {
   getNotionPageId, 
   setNotionPageId,
   getNotionEnabled,
-  setNotionEnabled 
+  setNotionEnabled,
+  getDictionaryEnabled,
+  setDictionaryEnabled
 } from '../services/preferences';
 import { testNotionConnection } from '../services/notion';
 import { useToast } from '../contexts/ToastContext';
@@ -21,6 +23,7 @@ const NotionModal: React.FC<NotionModalProps> = ({ isOpen, onClose }) => {
   const [apiKey, setApiKeyState] = useState('');
   const [pageId, setPageIdState] = useState('');
   const [enabled, setEnabledState] = useState(false);
+  const [dictionaryEnabled, setDictionaryEnabledState] = useState(false);
   const [isTestingConnection, setIsTestingConnection] = useState(false);
 
   useEffect(() => {
@@ -28,6 +31,7 @@ const NotionModal: React.FC<NotionModalProps> = ({ isOpen, onClose }) => {
       setApiKeyState(getNotionApiKey() || '');
       setPageIdState(getNotionPageId() || '');
       setEnabledState(getNotionEnabled());
+      setDictionaryEnabledState(getDictionaryEnabled());
     }
   }, [isOpen]);
 
@@ -52,8 +56,9 @@ const NotionModal: React.FC<NotionModalProps> = ({ isOpen, onClose }) => {
       setNotionApiKey(apiKey.trim());
       setNotionPageId(pageId.trim());
       setNotionEnabled(enabled);
+      setDictionaryEnabled(dictionaryEnabled);
       
-      addToast('Notion settings saved successfully', 'success');
+      addToast('Settings saved successfully', 'success');
       onClose();
     } catch (error) {
       console.error('Error saving Notion settings:', error);
@@ -126,8 +131,33 @@ const NotionModal: React.FC<NotionModalProps> = ({ isOpen, onClose }) => {
                 </div>
 
                 {/* Body */}
-                <div className="px-6 py-4 space-y-4">
-                  {/* Enable/Disable Toggle */}
+                <div className="px-6 py-4 space-y-6">
+                  {/* Dictionary Toggle */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-dark-text font-medium">Oxford Dictionary Lookup</h3>
+                      <p className="text-sm text-dark-textMuted">
+                        Show dictionary definitions with "Lookup" button
+                      </p>
+                      <p className="text-xs text-dark-textMuted mt-1 text-yellow-400">
+                        ⚠️ Currently works with English words only
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setDictionaryEnabledState(!dictionaryEnabled)}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                        dictionaryEnabled ? 'bg-dark-accent' : 'bg-gray-600'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          dictionaryEnabled ? 'translate-x-6' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Notion Integration Toggle */}
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-dark-text font-medium">Enable Notion Integration</h3>

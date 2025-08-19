@@ -76,7 +76,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
-          className="bg-dark-card border border-dark-border rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden"
+          className="bg-dark-card border border-dark-border rounded-lg shadow-xl max-w-5xl w-full max-h-[85vh] overflow-hidden"
         >
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b border-dark-border">
@@ -137,7 +137,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
           </div>
 
           {/* Content */}
-          <div className="p-6 overflow-y-auto max-h-[60vh] grid grid-cols-1 lg:grid-cols-[minmax(560px,1fr)_320px] gap-10">
+          <div className="p-6 overflow-y-auto overflow-x-auto max-h-[65vh] grid grid-cols-1 lg:grid-cols-[minmax(600px,2fr)_350px] gap-12">
             {isLoading && (
               <div className="flex items-center justify-center py-8">
                 <div className="flex items-center space-x-3">

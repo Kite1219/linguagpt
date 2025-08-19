@@ -14,7 +14,7 @@ import { Language, TranslationResponse } from './types';
 import { addToHistory, getHistory, HistoryItem, clearHistory, findCachedTranslation } from './services/history';
 import { languages } from './data/languages';
 import { getDraftInput, setDraftInput, getDraftTranslation, setDraftTranslation } from './services/draft';
-import { getPreferredSourceLanguageCode, getPreferredTargetLanguageCode, setPreferredSourceLanguageCode, setPreferredTargetLanguageCode, getNotionEnabled } from './services/preferences';
+import { getPreferredSourceLanguageCode, getPreferredTargetLanguageCode, setPreferredSourceLanguageCode, setPreferredTargetLanguageCode, getNotionEnabled, getDictionaryEnabled } from './services/preferences';
 import { addToNotion } from './services/notion';
 import { ToastProvider, useToast } from './contexts/ToastContext';
 
