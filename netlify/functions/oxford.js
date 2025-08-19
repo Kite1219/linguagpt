@@ -94,7 +94,11 @@ function scrape(html) {
   for (const selector of phonSelectors) {
     const text = $(selector).first().text().trim();
     if (text) {
-      phon = text.replace(/[\/\[\]]/g, ''); // Clean up phonetic notation
+      // Clean up phonetic notation - remove slashes, brackets, and extra spaces
+      phon = text
+        .replace(/^[\/\[\(]+|[\/\]\)]+$/g, '') // Remove leading/trailing delimiters
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
       break;
     }
   }
@@ -166,7 +170,15 @@ function scrape(html) {
         const examples = [];
         for (const exSelector of exampleSelectors) {
           $li.find(exSelector).each((j, ex) => {
-            const exampleText = $(ex).text().trim();
+            let exampleText = $(ex).text().trim();
+            
+            // Clean up example text - remove underscores and other formatting
+            exampleText = exampleText
+              .replace(/^_+|_+$/g, '') // Remove leading/trailing underscores
+              .replace(/_([^_]+)_/g, '$1') // Remove underscores around words
+              .replace(/\s+/g, ' ') // Normalize whitespace
+              .trim();
+              
             if (exampleText && examples.length < 5) { // Limit to 5 examples per sense
               examples.push(exampleText);
             }

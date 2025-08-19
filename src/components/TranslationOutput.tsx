@@ -49,7 +49,7 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
     }
 
     // Only show for English input (source) since Oxford only has English
-    if (translation?.sourceLanguage !== 'English' && translation?.sourceLanguage !== 'Auto-detect') {
+    if (!isEnglishSource()) {
       addToast('Dictionary lookup is only available for English words', 'info');
       return;
     }
@@ -83,6 +83,18 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
   const closeDefinitionsModal = () => {
     setIsDefinitionsModalOpen(false);
     setOxfordEntry(null);
+  };
+
+  // Helper function to check if the source language supports dictionary lookup
+  const isEnglishSource = () => {
+    if (!translation?.sourceLanguage) return false;
+    
+    const sourceLang = translation.sourceLanguage.toLowerCase();
+    return (
+      sourceLang === 'english' || 
+      sourceLang === 'auto-detect' ||
+      sourceLang.includes('english')
+    );
   };
 
   return (
@@ -186,7 +198,7 @@ const TranslationOutput: React.FC<TranslationOutputProps> = ({
                 </div>
                 
                 {/* Show More button - only for English source */}
-                {inputText && (translation.sourceLanguage === 'English' || translation.sourceLanguage === 'Auto-detect') && (
+                {inputText && isEnglishSource() && (
                   <button
                     onClick={handleShowMore}
                     disabled={isLookingUp}

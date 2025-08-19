@@ -8,8 +8,10 @@ A beautiful, minimalist translation app built with React, TypeScript, and powere
 - 🌍 Support for 35+ languages
 - 🤖 Powered by OpenAI GPT-4o-mini for accurate translations
 - 📖 **NEW!** Oxford Dictionary integration with "Show More" button
-  - Word definitions, pronunciation, and examples
+  - Word definitions, pronunciation (IPA), and clean examples
+  - 🔊 **Text-to-speech pronunciation** with speaker button
   - Multiple senses and usage labels
+  - Clean formatting without underscore artifacts
   - Direct links to Oxford Learner's Dictionary
   - Available for English words only
 - 🎭 Smooth animations with Framer Motion
@@ -62,11 +64,11 @@ npm start
 4. Click "Translate" to get your translation
 5. Use the copy button to copy the translated text
 6. Use the swap button to quickly reverse translation direction
-7. **NEW!** For English words, click "Show More" to see:
+7. **NEW!** For English words (including Auto-detect), click "Show More" to see:
    - Detailed definitions from Oxford Dictionary
-   - Pronunciation guide (IPA)
+   - 🔊 Pronunciation guide (IPA) with speaker button
    - Multiple word senses and meanings
-   - Usage examples and synonyms
+   - Clean usage examples and synonyms
    - Part of speech information
 
 ### Testing Dictionary Features

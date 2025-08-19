@@ -17,6 +17,50 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
   word,
   isLoading
 }) => {
+  const handlePronunciation = (wordToSpeak: string) => {
+    if ('speechSynthesis' in window) {
+      // Cancel any ongoing speech
+      window.speechSynthesis.cancel();
+      
+      const speak = () => {
+        // Create new utterance
+        const utterance = new SpeechSynthesisUtterance(wordToSpeak);
+        
+        // Set voice properties for better pronunciation
+        utterance.lang = 'en-US';
+        utterance.rate = 0.8; // Slightly slower for clarity
+        utterance.pitch = 1;
+        utterance.volume = 0.8;
+        
+        // Try to find a good English voice
+        const voices = window.speechSynthesis.getVoices();
+        const englishVoice = voices.find(voice => 
+          voice.lang.startsWith('en') && (voice.name.includes('Google') || voice.name.includes('Microsoft'))
+        ) || voices.find(voice => 
+          voice.lang.startsWith('en')
+        );
+        
+        if (englishVoice) {
+          utterance.voice = englishVoice;
+        }
+        
+        // Speak the word
+        window.speechSynthesis.speak(utterance);
+      };
+      
+      // Handle case where voices might not be loaded yet
+      const voices = window.speechSynthesis.getVoices();
+      if (voices.length === 0) {
+        // Wait for voices to load
+        window.speechSynthesis.addEventListener('voiceschanged', speak, { once: true });
+      } else {
+        speak();
+      }
+    } else {
+      console.warn('Speech synthesis not supported in this browser');
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -42,9 +86,20 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                     </span>
                   )}
                   {entry.phon && (
-                    <span className="font-mono text-dark-textMuted">
-                      /{entry.phon}/
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-dark-textMuted">
+                        /{entry.phon}/
+                      </span>
+                      <button
+                        onClick={() => handlePronunciation(entry.head)}
+                        className="p-1.5 rounded-full hover:bg-dark-accent hover:bg-opacity-20 transition-all duration-200 text-dark-accent hover:text-dark-accentHover hover:scale-110 active:scale-95"
+                        title={`🔊 Listen to pronunciation of "${entry.head}"`}
+                      >
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+                        </svg>
+                      </button>
+                    </div>
                   )}
                 </div>
               )}
@@ -136,7 +191,7 @@ const DefinitionsModal: React.FC<DefinitionsModalProps> = ({
                           <ul className="space-y-1">
                             {sense.examples.map((example, exIndex) => (
                               <li key={exIndex} className="text-sm text-dark-textMuted italic">
-                                "_{example}_"
+                                "{example}"
                               </li>
                             ))}
                           </ul>
